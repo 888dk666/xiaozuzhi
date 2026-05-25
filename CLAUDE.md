@@ -11,6 +11,7 @@
 | `.claude/agents/` | 5 角色 agent 定义文件——spawn 时的角色 system prompt 源头（architect/qa-reviewer/compliance/finance/engineer） |
 | `任务笔记/` | 任务笔记持久化目录（跨会话持久化，非 /tmp/） |
 | `reference/` | 参考文档——Subagent Hook 官方规格等 |
+| `spawn-cost.jsonl` | 成本日志（运行时自动创建）——每次 spawn 的 token 消耗 + stop_reason |
 | `research-spawn-patterns.md` | 外部 spawn 模式调研——spawn prompt 模板/卡死检测/文档同步/校验/10+ Agent 铁律 |
 
 **基础设施：** git repo（2026-05-25 初始化，commit `51e01b6`）。工程师 agent 软链接到 `~/.claude/agents/engineer.md`（全局可用，跨 CWD 发现）。
