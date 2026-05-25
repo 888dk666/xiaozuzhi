@@ -127,13 +127,20 @@ metadata:
 ```json
 {
   "hookSpecificOutput": {
-    "hookEventName": "SubagentStop",
-    "additionalContext": "...",
-    "decision": "block",
-    "reason": "..."
+    "hookEventName": "SubagentStart",
+    "additionalContext": "Follow security guidelines for this task"
   }
 }
 ```
+
+```json
+{
+  "decision": "block",
+  "reason": "Please also verify the edge cases before finishing"
+}
+```
+
+> 注意：`hookSpecificOutput` 和顶层 `decision` 是两种不同的输出模式。SubagentStart 用前者（additionalContext），SubagentStop 用后者（decision: block）。SubagentStop 不支持 additionalContext。
 
 ### Exit Code 规则总结
 
@@ -165,9 +172,74 @@ hooks:
 - **SubagentStart**：`additionalContext` 出现在子 agent 对话开头，第一条 prompt 之前。多个 hook 的值拼接。✅ 已实测确认（2026-05-25）。
 - **SubagentStop**：**不支持 `additionalContext`**。要向父会话注入内容，需改用 PostToolUse hook（matcher: Agent 工具）代替。
 
-## 实测 stdin 字段（2026-05-25 调试 hook 抓取）
+## 官方 stdin 字段表（完整版，2026-05-25 Jina 抓取）
 
-### SubagentStart（实测 + 官方对照）
+### SubagentStart 官方字段
+
+在通用字段之外，SubagentStart 接收：
+
+| 字段 | 说明 |
+|------|------|
+| `session_id` | 当前会话标识符 |
+| `transcript_path` | 对话 JSON 路径 |
+| `cwd` | hook 调用时的当前工作目录 |
+| `hook_event_name` | 固定为 `"SubagentStart"` |
+| `agent_id` | 子 agent 唯一标识符 |
+| `agent_type` | Agent 名称（如 `"Explore"`、`"general-purpose"`、`"Plan"`，或自定义名） |
+
+官方示例：
+```json
+{
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../xxx.jsonl",
+  "cwd": "/Users/...",
+  "hook_event_name": "SubagentStart",
+  "agent_id": "agent-abc123",
+  "agent_type": "Explore"
+}
+```
+
+### SubagentStop 官方字段
+
+在通用字段之外，SubagentStop 接收：
+
+| 字段 | 说明 |
+|------|------|
+| `session_id` | 当前会话标识符 |
+| `transcript_path` | **父会话**的转录路径 |
+| `cwd` | 当前工作目录 |
+| `permission_mode` | 当前权限模式 |
+| `hook_event_name` | 固定为 `"SubagentStop"` |
+| `stop_hook_active` | 布尔值，是否有 Stop hook 正在运行 |
+| `agent_id` | 子 agent 唯一标识符 |
+| `agent_type` | Agent 名称（用于 matcher 过滤） |
+| `agent_transcript_path` | **子 agent 自己的转录文件路径**，在父转录目录的 `subagents/` 子目录下 |
+| `last_assistant_message` | 子 agent 最终回复的文本内容（无需解析转录文件） |
+| `background_tasks` | 父会话的后台任务数组（v2.1.145+） |
+| `session_crons` | 父会话的 cron 任务数组（v2.1.145+） |
+| `effort` | 含 `level` 字段的对象，当前 turn 的活跃 effort 级别 |
+
+官方示例：
+```json
+{
+  "session_id": "abc123",
+  "transcript_path": "~/.claude/projects/.../abc123.jsonl",
+  "cwd": "/Users/...",
+  "permission_mode": "default",
+  "hook_event_name": "SubagentStop",
+  "stop_hook_active": false,
+  "agent_id": "def456",
+  "agent_type": "Explore",
+  "agent_transcript_path": "~/.claude/projects/.../abc123/subagents/agent-def456.jsonl",
+  "last_assistant_message": "Analysis complete. Found 3 potential issues...",
+  "background_tasks": [],
+  "session_crons": []
+}
+```
+
+## 实测 stdin 字段（2026-05-25 调试 hook 捕获，与官方对照一致）
+
+### SubagentStart 实测（含官方示例未列的 permission_mode + effort）
 
 ```json
 {
@@ -182,7 +254,7 @@ hooks:
 }
 ```
 
-### SubagentStop（实测 + 官方对照）
+### SubagentStop 实测（与官方字段完全一致）
 
 **比 SubagentStart 多 5 个字段：**
 
@@ -214,9 +286,9 @@ hooks:
 | `background_tasks` | 后台任务列表 | — |
 | `session_crons` | 会话 cron 列表 | — |
 
-## 截断说明（官方文档）
+## 获取说明
 
-官方文档中 SubagentStart 和 SubagentStop 的完整 per-event input schema 段落在提供的页面内容中被截断。以上字段表已通过 2026-05-25 调试 hook 实测填补。
+初抓 https://code.claude.com/docs/en/hooks 时 WebFetch 小模型截断了页面末尾的 per-event input schema。2026-05-25 通过 Jina（r.jina.ai）补充抓取获得完整文档。以下 stdin 字段表为官方文档 + 实测双重验证。
 
 ## 实测验证清单（2026-05-25 五项摸排）
 
