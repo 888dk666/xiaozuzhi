@@ -104,7 +104,7 @@ metadata:
 - `"reason"`：显示阻止原因的反馈
 - 不传 `decision`（或 exit 0 无 JSON）：允许子 agent 停止
 
-SubagentStop 的 `additionalContext`：文本作为系统提醒注入。超过 10,000 字符→保存到文件，替换为文件路径预览。
+**SubagentStop 不支持 `additionalContext`。** 要向父会话注入上下文，改用 PostToolUse hook + Agent 工具 matcher。
 
 ## 通用 JSON Stdout 格式
 
@@ -162,8 +162,8 @@ hooks:
 
 ## 上下文行为
 
-- **SubagentStart**：`additionalContext` 出现在子 agent 对话开头，第一条 prompt 之前。多个 hook 的值拼接。
-- **SubagentStop + additionalContext**：文本作为系统提醒注入 Claude 上下文。超 10,000 字符则保存到文件，替换为文件路径预览。
+- **SubagentStart**：`additionalContext` 出现在子 agent 对话开头，第一条 prompt 之前。多个 hook 的值拼接。✅ 已实测确认（2026-05-25）。
+- **SubagentStop**：**不支持 `additionalContext`**。要向父会话注入内容，需改用 PostToolUse hook（matcher: Agent 工具）代替。
 
 ## 实测 stdin 字段（2026-05-25 调试 hook 抓取）
 
