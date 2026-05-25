@@ -216,9 +216,44 @@ hooks:
 
 ## 截断说明（官方文档）
 
-官方文档中 SubagentStart 和 SubagentStop 的完整 per-event input schema 段落在提供的页面内容中被截断。以上字段表已通过 2026-05-25 调试 hook 实测填补，原始数据已提取记录于此。
+官方文档中 SubagentStart 和 SubagentStop 的完整 per-event input schema 段落在提供的页面内容中被截断。以上字段表已通过 2026-05-25 调试 hook 实测填补。
+
+## 实测验证清单（2026-05-25 五项摸排）
+
+| # | 场景 | 结论 | 证据 |
+|---|------|------|------|
+| 1 | 后台 agent 触发 hook？ | ✅ SubagentStart/SubagentStop 均触发，字段与前台完全一致 | 实测 general-purpose 后台 agent |
+| 2 | 失败/崩溃场景 | ⚠️ 工具错误不阻断 SubagentStop，转录 `stop_reason` 可区分正常/截断/异常 | 实测 agent 执行失败 Bash（exit 1），SubagentStop 正常触发 |
+| 3 | worktree agent | ⚠️ 无法实测（需从晓组织 git repo 内 spawn）。机制推断：hook 与 worktree 无关，`agent_transcript_path` 不在 worktree 内 | 晓组织已初始化为 git repo（2026-05-25），待下次从项目目录内实测 |
+| 4 | 转录文件写入时序 | ✅ SubagentStop 触发时文件已完整写入（实测 31,907 字节/8 行），无竞态 | hook 内 `wc -c` 实时检测 |
+| 5 | additionalContext 注入 | ✅ 确认注入到子 agent 上下文，agent 能精确引用注入的标记文本 | Explore agent 回显了标记内容 |
 
 ## 对 Gap #8 的影响
 
-- **Part A（成本日志）**：完全可行。SubagentStart 记时间+类型，SubagentStop 记完成时间。
-- **Part B（活跃数硬挡）**：原方案（SubagentStart exit 2 拒绝 spawn）**不可行**。SubagentStart 只能观察+警告（stderr + additionalContext），不能硬挡。需要替代方案。
+- **Part A（成本日志）**：完全可行。SubagentStart 记时间+类型，SubagentStop 通过 `agent_transcript_path` 读取 token 消耗。转录 `stop_reason` 可区分正常/截断/异常。
+- **Part B（活跃数软提醒）**：SubagentStart 不可 block spawn（平台限制）。只做计数+stderr 警告+additionalContext 提醒。SubagentStop 减计数。需僵尸清理（SubagentStop 崩溃时不触发）。
+
+## subagent 转录 `stop_reason` 完整取值（Messages API）
+
+来源：https://platform.claude.com/docs/en/api/messages，2026-05-25 抓取。
+
+| 值 | 含义 | 成本日志处理 |
+|---|------|------------|
+| `end_turn` | 自然停止 | 正常完成 |
+| `max_tokens` | 超过 token 上限被截断 | **截断**——产出不完整，标注 |
+| `tool_use` | 中间消息（调用了工具，非最终） | 忽略，读最后一条消息的 stop_reason |
+| `stop_sequence` | 自定义停止序列被触发 | 异常，标注 |
+| `refusal` | 安全策略拦截 | 被拒绝，标注 |
+| `pause_turn` | 长任务被暂停 | 极少见，标注 |
+
+## subagent 转录 `usage` 完整字段
+
+| 字段 | 说明 |
+|------|------|
+| `input_tokens` | 输入 token |
+| `output_tokens` | 输出 token |
+| `cache_creation_input_tokens` | 创建 cache 消耗的 input token |
+| `cache_read_input_tokens` | 从 cache 读取的 input token |
+| `service_tier` | `standard` / `priority` / `batch` |
+
+> 总输入 token = `input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens`

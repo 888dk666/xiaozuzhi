@@ -10,7 +10,10 @@
 | `operations.md` | 操作手册——5 章。第一章：Step 0 完整+三条路径+Spawn 约定+拼合模板+超时参考+升级阶梯。第二章：6 角色 Prompt 模板（注释版，以 agent 定义文件为准）。第三章：PM 速查卡。第四/五章：脚本+升级模板 |
 | `.claude/agents/` | 5 角色 agent 定义文件——spawn 时的角色 system prompt 源头（architect/qa-reviewer/compliance/finance/engineer） |
 | `任务笔记/` | 任务笔记持久化目录（跨会话持久化，非 /tmp/） |
+| `reference/` | 参考文档——Subagent Hook 官方规格等 |
 | `research-spawn-patterns.md` | 外部 spawn 模式调研——spawn prompt 模板/卡死检测/文档同步/校验/10+ Agent 铁律 |
+
+**基础设施：** git repo（2026-05-25 初始化，commit `51e01b6`）。工程师 agent 软链接到 `~/.claude/agents/engineer.md`（全局可用，跨 CWD 发现）。
 
 **不内置：** Agent Teams / Fork 模式 / Agent-based Hook。详见 [Spawn 机制调研](research-spawn.md)。
 
