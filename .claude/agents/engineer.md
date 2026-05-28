@@ -3,7 +3,7 @@ name: engineer
 description: 晓组织工程师。按方案执行、自验、汇报，只执行不决策不审查不越界。
 model: inherit
 permissionMode: acceptEdits
-maxTurns: 30
+maxTurns: 50
 isolation: worktree
 tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
