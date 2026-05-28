@@ -1435,7 +1435,7 @@ async def start_software_company():
 
 ### 14.10 启发
 
-1. **n_borg 并行模式**可直接借鉴——我们的牛马小卡并行派发跟 n_borg 是同构的，但我们没有 DAG 自动调度，靠 PM 手动判依赖
+1. **n_borg 并行模式**可直接借鉴——我们的纯牛马并行派发跟 n_borg 是同构的，但我们没有 DAG 自动调度，靠 PM 手动判依赖
 2. **Bug 修复闭环的自动化**——QA→Engineer 消息自动触发 FixBug，我们的 QA 打回靠 PM 手动中转。Agent Teams 的 mailbox 可以实现这个
 3. **代码审查内建到工程师**——WriteCodeReview 在存仓库前自动跑，我们的 QA 审查是独立的、事后的。两种思路各有道理：内建更快，独立更可靠
 4. **investment 硬上限**——MetaGPT 设了美元硬上限，我们的财务小克只标注不否决。"不否决"是设计选择，但 MetaGPT 证明硬上限可行
