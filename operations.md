@@ -1,6 +1,7 @@
 ---
 name: 晓组织操作手册
 description: 晓组织落地操作——prompt 模板、PM 操作速查卡、质检脚本、spawn 命令、升级模板
+version: 3.0 (2026-05-31)
 metadata:
   type: operations
   project: 晓组织

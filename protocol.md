@@ -1,6 +1,7 @@
 ---
 name: multi-agent-protocol
 description: 多 Agent 并行模式——小克拆任务、派 agent，同时推进互不依赖的工作
+version: 3.0 (2026-05-31)
 metadata:
   type: reference
   originSessionId: 630c2a48-1791-4ce8-95f9-050d4a44c361
